@@ -10,14 +10,15 @@ use daedalus::modded::{
     LoaderVersion, Manifest, PartialVersionInfo, Processor, SidedDataEntry,
 };
 use lazy_static::lazy_static;
-use log::info;
+use log::{error, info};
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::Read;
 use std::sync::Arc;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use tokio::sync::{Mutex, Semaphore};
+use tokio::time::sleep;
 
 lazy_static! {
     static ref FORGE_MANIFEST_V1_QUERY: VersionReq =
@@ -97,11 +98,28 @@ pub async fn retrieve_data(
 
                 {
                     let loaders_futures = loaders.into_iter().map(|(loader_version_full, version)| async {
+
+                        // 1.11.2-13.20.0.2200
+                        // println!("{:#?}", loader_version_full);
+
+                        // Version {
+                        //     major: 20,
+                        //     minor: 0,
+                        //     patch: 2200,
+                        // }
+                        // println!("{:#?}", version);
+
                         let versions_mutex = Arc::clone(&old_versions);
                         let visited_assets = Arc::clone(&visited_assets_mutex);
                         let uploaded_files_mutex = Arc::clone(&uploaded_files_mutex);
                         let semaphore = Arc::clone(&semaphore);
                         let minecraft_version = minecraft_version.clone();
+
+                        // println!("versions_mutex: {:#?}", versions_mutex.lock().await);
+                        // println!("visited_assets: {:#?}", visited_assets.lock().await);
+                        // println!("uploaded_files_mutex: {:#?}", uploaded_files_mutex.lock().await);
+                        // println!("semaphore: {:#?}", semaphore);
+                        // println!("minecraft_version: {:#?}", minecraft_version);
 
                         async move {
                             /// These forge versions are not worth supporting!
@@ -133,6 +151,8 @@ pub async fn retrieve_data(
 
                             info!("Forge - Installer Start {}", loader_version_full.clone());
                             let bytes = download_file(&format!("https://maven.minecraftforge.net/net/minecraftforge/forge/{0}/forge-{0}-installer.jar", loader_version_full), None, semaphore.clone()).await?;
+
+                            // return Err(Error::TestError("test".to_owned()));
 
                             let reader = std::io::Cursor::new(bytes);
 
@@ -473,8 +493,15 @@ pub async fn retrieve_data(
                             let now = Instant::now();
 
                             let chunk: Vec<_> = versions.by_ref().take(1).collect();
-                            let res = futures::future::try_join_all(chunk).await?;
-                            loaders_versions.extend(res.into_iter().flatten());
+                            // let res = futures::future::try_join_all(chunk).await?;
+                            // loaders_versions.extend(res.into_iter().flatten());
+
+                            match futures::future::try_join_all(chunk).await {
+                                Ok(res) => loaders_versions.extend(res.into_iter().flatten()),
+                                Err(err) => {
+                                    error!("Loader Chunk Error: {:?}", err);
+                                },
+                            }
 
                             chunk_index += 1;
 
@@ -482,7 +509,7 @@ pub async fn retrieve_data(
                             info!("Loader Chunk {}/{len} Elapsed: {:.2?}", chunk_index, elapsed);
                         }
                     }
-                    //futures::future::try_join_all(loaders_futures).await?;
+
                 }
 
                 versions.lock().await.push(daedalus::modded::Version {
@@ -512,7 +539,6 @@ pub async fn retrieve_data(
             info!("Chunk {}/{len} Elapsed: {:.2?}", chunk_index, elapsed);
         }
     }
-    //futures::future::try_join_all(version_futures).await?;
 
     if let Ok(versions) = Arc::try_unwrap(versions) {
         let mut versions = versions.into_inner();

@@ -1,4 +1,4 @@
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use s3::creds::Credentials;
 use s3::error::S3Error;
 use s3::{Bucket, Region};
@@ -36,6 +36,8 @@ pub enum Error {
     ArcError,
     #[error("Error acquiring semaphore: {0}")]
     AcquireError(#[from] tokio::sync::AcquireError),
+    #[error("{0}")]
+    TestError(String),
 }
 
 #[tokio::main]
@@ -71,16 +73,6 @@ async fn main() {
         };
 
         if let Some(manifest) = versions {
-            match fabric::retrieve_data(
-                &manifest,
-                &mut uploaded_files,
-                semaphore.clone(),
-            )
-            .await
-            {
-                Ok(..) => {}
-                Err(err) => error!("{:?}", err),
-            };
             match forge::retrieve_data(
                 &manifest,
                 &mut uploaded_files,
@@ -91,6 +83,18 @@ async fn main() {
                 Ok(..) => {}
                 Err(err) => error!("{:?}", err),
             };
+
+            match fabric::retrieve_data(
+                &manifest,
+                &mut uploaded_files,
+                semaphore.clone(),
+            )
+            .await
+            {
+                Ok(..) => {}
+                Err(err) => error!("{:?}", err),
+            };
+
             match quilt::retrieve_data(
                 &manifest,
                 &mut uploaded_files,
@@ -101,6 +105,7 @@ async fn main() {
                 Ok(..) => {}
                 Err(err) => error!("{:?}", err),
             };
+
             match neo::retrieve_data(
                 &manifest,
                 &mut uploaded_files,
@@ -234,6 +239,7 @@ pub async fn download_file(
     info!("{} started downloading", url);
     let val = daedalus::download_file(url, sha1).await?;
     info!("{} finished downloading", url);
+    // Err(Error::TestError("test error".to_owned()))
     Ok(val)
 }
 
