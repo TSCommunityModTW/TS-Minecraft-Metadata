@@ -496,6 +496,7 @@ pub async fn retrieve_data(
                             // let res = futures::future::try_join_all(chunk).await?;
                             // loaders_versions.extend(res.into_iter().flatten());
 
+                            // Flx DaedalusError FetchError TimedOut
                             match futures::future::try_join_all(chunk).await {
                                 Ok(res) => loaders_versions.extend(res.into_iter().flatten()),
                                 Err(err) => {

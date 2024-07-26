@@ -72,51 +72,51 @@ async fn main() {
             }
         };
 
-        if let Some(manifest) = versions {
-            match forge::retrieve_data(
-                &manifest,
-                &mut uploaded_files,
-                semaphore.clone(),
-            )
-            .await
-            {
-                Ok(..) => {}
-                Err(err) => error!("{:?}", err),
-            };
+        // if let Some(manifest) = versions {
+        //     match forge::retrieve_data(
+        //         &manifest,
+        //         &mut uploaded_files,
+        //         semaphore.clone(),
+        //     )
+        //     .await
+        //     {
+        //         Ok(..) => {}
+        //         Err(err) => error!("{:?}", err),
+        //     };
 
-            match fabric::retrieve_data(
-                &manifest,
-                &mut uploaded_files,
-                semaphore.clone(),
-            )
-            .await
-            {
-                Ok(..) => {}
-                Err(err) => error!("{:?}", err),
-            };
+        //     match fabric::retrieve_data(
+        //         &manifest,
+        //         &mut uploaded_files,
+        //         semaphore.clone(),
+        //     )
+        //     .await
+        //     {
+        //         Ok(..) => {}
+        //         Err(err) => error!("{:?}", err),
+        //     };
 
-            match quilt::retrieve_data(
-                &manifest,
-                &mut uploaded_files,
-                semaphore.clone(),
-            )
-            .await
-            {
-                Ok(..) => {}
-                Err(err) => error!("{:?}", err),
-            };
+        //     match quilt::retrieve_data(
+        //         &manifest,
+        //         &mut uploaded_files,
+        //         semaphore.clone(),
+        //     )
+        //     .await
+        //     {
+        //         Ok(..) => {}
+        //         Err(err) => error!("{:?}", err),
+        //     };
 
-            match neo::retrieve_data(
-                &manifest,
-                &mut uploaded_files,
-                semaphore.clone(),
-            )
-            .await
-            {
-                Ok(..) => {}
-                Err(err) => error!("{:?}", err),
-            };
-        }
+        //     match neo::retrieve_data(
+        //         &manifest,
+        //         &mut uploaded_files,
+        //         semaphore.clone(),
+        //     )
+        //     .await
+        //     {
+        //         Ok(..) => {}
+        //         Err(err) => error!("{:?}", err),
+        //     };
+        // }
     }
 }
 

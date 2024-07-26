@@ -4,7 +4,7 @@ use daedalus::get_hash;
 use daedalus::minecraft::{
     merge_partial_library, Library, PartialLibrary, VersionManifest,
 };
-use log::info;
+use log::{error, info};
 use serde::Deserialize;
 use std::sync::Arc;
 use std::time::Instant;
@@ -243,7 +243,15 @@ pub async fn retrieve_data(
             let now = Instant::now();
 
             let chunk: Vec<_> = versions.by_ref().take(100).collect();
-            futures::future::try_join_all(chunk).await?;
+            // futures::future::try_join_all(chunk).await?;
+
+            // Flx DaedalusError FetchError TimedOut
+            match futures::future::try_join_all(chunk).await {
+                Ok(res) => {}
+                Err(err) => {
+                    error!("Minecraft Chunk Error: {:?}", err);
+                }
+            }
 
             chunk_index += 1;
 
