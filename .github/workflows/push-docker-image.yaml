@@ -3,7 +3,7 @@ name: Push Docker Image
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v*.*.*.*"
     
 jobs:
   push-image-to-docker-hub:
