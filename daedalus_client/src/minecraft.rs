@@ -3,15 +3,11 @@ use crate::{
     util::download_file, util::format_url, util::sha1_async, Error,
     MirrorArtifact, UploadFile,
 };
-<<<<<<< HEAD
-use log::{error, info};
-=======
 use daedalus::minecraft::{
     merge_partial_library, Library, PartialLibrary, VersionInfo,
     VersionManifest, VERSION_MANIFEST_URL,
 };
 use dashmap::DashMap;
->>>>>>> modrinth/master
 use serde::Deserialize;
 use std::sync::Arc;
 use tokio::sync::Semaphore;
@@ -154,96 +150,8 @@ pub async fn fetch(
 
         new_versions.sort_by(|a, b| b.release_time.cmp(&a.release_time));
 
-<<<<<<< HEAD
-                {
-                    let mut visited_assets = visited_assets_mutex.lock().await;
-
-                    if !visited_assets.contains(&version_info.asset_index.id) {
-                        if let Some(assets_hash) = assets_hash {
-                            if version_info.asset_index.sha1 != assets_hash {
-                                download_assets = true;
-                            }
-                        } else {
-                            download_assets = true;
-                        }
-                    }
-
-                    if download_assets {
-                        visited_assets
-                            .push(version_info.asset_index.id.clone());
-                    }
-                }
-
-                if download_assets {
-                    let assets_index = download_file(
-                        &assets_index_url,
-                        Some(&version_info.asset_index.sha1),
-                        semaphore.clone(),
-                    )
-                    .await?;
-
-                    {
-                        upload_futures.push(upload_file_to_bucket(
-                            assets_path,
-                            assets_index.to_vec(),
-                            Some("application/json".to_string()),
-                            uploaded_files_mutex.as_ref(),
-                            semaphore.clone(),
-                        ));
-                    }
-                }
-
-                {
-                    upload_futures.push(upload_file_to_bucket(
-                        version_path,
-                        serde_json::to_vec(&version_info)?,
-                        Some("application/json".to_string()),
-                        uploaded_files_mutex.as_ref(),
-                        semaphore.clone(),
-                    ));
-                }
-
-                futures::future::try_join_all(upload_futures).await?;
-
-                Ok::<(), Error>(())
-            }
-            .await?;
-
-            Ok::<(), Error>(())
-        })
-    }
-
-    {
-        let mut versions = version_futures.into_iter().peekable();
-        let mut chunk_index = 0;
-        while versions.peek().is_some() {
-            let now = Instant::now();
-
-            let chunk: Vec<_> = versions.by_ref().take(100).collect();
-            // futures::future::try_join_all(chunk).await?;
-
-            // Flx DaedalusError FetchError TimedOut
-            match futures::future::try_join_all(chunk).await {
-                Ok(res) => {}
-                Err(err) => {
-                    error!("Minecraft Chunk Error: {:?}", err);
-                }
-            }
-
-            chunk_index += 1;
-
-            let elapsed = now.elapsed();
-            info!("Chunk {} Elapsed: {:.2?}", chunk_index, elapsed);
-        }
-    }
-    //futures::future::try_join_all(version_futures).await?;
-
-    upload_file_to_bucket(
-        format!(
-=======
         // create and upload the new manifest
         let version_manifest_path = format!(
->>>>>>> modrinth/master
             "minecraft/v{}/manifest.json",
             daedalus::minecraft::CURRENT_FORMAT_VERSION
         );
